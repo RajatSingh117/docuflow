@@ -5,7 +5,7 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.responses import JSONResponse
 from app.config import settings
 from app.database import engine, Base
-from app.api import auth, users, analytics, views, documents, processing, reviews
+from app.api import auth, users, analytics, views, documents, processing, reviews, reports
 
 
 @asynccontextmanager
@@ -35,6 +35,7 @@ app.include_router(users.router)
 app.include_router(documents.router)
 app.include_router(processing.router)
 app.include_router(reviews.router)
+app.include_router(reports.router)
 app.include_router(analytics.router)
 app.include_router(views.router)
 

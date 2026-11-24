@@ -294,3 +294,31 @@ def review_detail_page(
             "job": job
         }
     )
+
+
+@router.get("/reports", response_class=HTMLResponse)
+def reports_page(
+    request: Request,
+    current_user: User = Depends(get_current_user_optional),
+    db: Session = Depends(get_db)
+):
+    """Render reports list and export interface."""
+    if not current_user:
+        return RedirectResponse(url="/login", status_code=status.HTTP_302_FOUND)
+
+    from app.models.report import GeneratedReport
+    reports = db.query(GeneratedReport).order_by(GeneratedReport.created_at.desc()).all()
+    completed_jobs = db.query(ProcessingJob).filter(
+        ProcessingJob.status.in_([JobStatus.COMPLETED, JobStatus.NEEDS_REVIEW])
+    ).order_by(ProcessingJob.created_at.desc()).all()
+
+    return templates.TemplateResponse(
+        "reports/index.html",
+        {
+            "request": request,
+            "current_user": current_user,
+            "active_page": "reports",
+            "reports": reports,
+            "completed_jobs": completed_jobs
+        }
+    )
