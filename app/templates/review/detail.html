@@ -1,0 +1,222 @@
+{% extends "base.html" %}
+
+{% block title %}Review Job #JOB-{{ job.id }} — DocuFlow{% endblock %}
+{% block breadcrumb %}Review Job #JOB-{{ job.id }}{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <div>
+    <h1 class="page-title">Review Extracted Records — #JOB-{{ job.id }}</h1>
+    <p class="page-subtitle">
+      Source: <strong>{{ job.document.original_filename if job.document else 'Unknown' }}</strong> • 
+      Status: <span class="badge badge-{{ job.status.value.lower() }}">{{ job.status.value }}</span>
+    </p>
+  </div>
+  {% if current_user and current_user.role.value in ['admin', 'processing_manager'] and job.status.value != 'COMPLETED' %}
+  <button class="btn btn-primary" onclick="approveAllJobRecords({{ job.id }})">
+    <svg style="width:16px;height:16px;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+    Approve All Records & Complete Job
+  </button>
+  {% elif job.status.value == 'COMPLETED' %}
+  <a href="/reports" class="btn btn-primary">
+    <svg style="width:16px;height:16px;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+    Export Reports
+  </a>
+  {% endif %}
+</div>
+
+<!-- Extracted Records Loop -->
+{% for record in job.extracted_records %}
+<div class="card" style="margin-bottom: 24px;">
+  <div class="card-header">
+    <div style="display:flex; align-items:center; gap:12px;">
+      <h2 class="card-title">Record #{{ record.record_number }}</h2>
+      <span class="badge badge-{{ record.validation_status.value.lower() }}">
+        {{ record.validation_status.value }}
+      </span>
+      {% if record.is_approved %}
+      <span class="badge badge-valid">✓ APPROVED</span>
+      {% else %}
+      <span class="badge badge-pending">PENDING APPROVAL</span>
+      {% endif %}
+    </div>
+
+    {% if not record.is_approved and current_user and current_user.role.value in ['admin', 'processing_manager'] %}
+    <button class="btn btn-secondary btn-sm" onclick="approveSingleRecord({{ record.id }})">
+      Approve This Record
+    </button>
+    {% endif %}
+  </div>
+
+  <div class="table-responsive">
+    <table class="data-table">
+      <thead>
+        <tr>
+          <th>Field Name</th>
+          <th>Raw Value</th>
+          <th>Normalized Value</th>
+          <th>Confidence</th>
+          <th>Validation Status</th>
+          <th>Diagnostics / Rules</th>
+          <th>Action</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for field in record.fields %}
+        <tr>
+          <td><strong>{{ field.field_name.replace('_', ' ').title() }}</strong></td>
+          <td style="color:var(--text-secondary);">{{ field.extracted_value or '—' }}</td>
+          <td>
+            <strong style="color:var(--text-main);">{{ field.normalized_value or '—' }}</strong>
+          </td>
+          <td>
+            <div style="display:flex;align-items:center;gap:8px;">
+              <div style="width:60px;height:5px;background:#E2E8F0;border-radius:999px;overflow:hidden;">
+                <div style="width:{{ (field.confidence_score * 100)|round }}%;height:100%;background:var(--primary-accent);"></div>
+              </div>
+              <span style="font-size:11px;font-weight:600;">{{ (field.confidence_score * 100)|round }}%</span>
+            </div>
+          </td>
+          <td>
+            <span class="badge badge-{{ field.validation_status.value.lower() }}">
+              {{ field.validation_status.value }}
+            </span>
+          </td>
+          <td style="font-size:12px;color:var(--text-secondary);max-width:260px;">
+            {% if field.validation_message %}
+            <span style="color:var(--error);">{{ field.validation_message }}</span>
+            {% else %}
+            <span style="color:var(--success);">Passes validation</span>
+            {% endif %}
+          </td>
+          <td>
+            {% if current_user and current_user.role.value in ['admin', 'processing_manager'] %}
+            <button class="btn btn-secondary btn-sm" onclick="openEditModal({{ field.id }}, '{{ field.field_name }}', '{{ field.normalized_value or '' }}')">
+              Edit
+            </button>
+            {% else %}
+            <span style="font-size:12px;color:var(--text-secondary);">Read-only</span>
+            {% endif %}
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% else %}
+<div class="card">
+  <div class="empty-state">
+    <div class="empty-state-title">No extracted records found</div>
+    <div class="empty-state-desc">This job has not produced structured records yet.</div>
+  </div>
+</div>
+{% endfor %}
+
+<!-- Edit Field Modal -->
+<div id="editFieldModal" class="modal-backdrop">
+  <div class="modal-dialog">
+    <div class="modal-header">
+      <h3 class="modal-title" id="editModalTitle">Edit Extracted Value</h3>
+      <button onclick="closeModal('editFieldModal')" style="background:none;border:none;cursor:pointer;font-size:18px;">✕</button>
+    </div>
+    <form onsubmit="handleFieldUpdate(event)">
+      <div class="modal-body">
+        <input type="hidden" id="editFieldId">
+        <div class="form-group">
+          <label class="form-label" for="editFieldValue">Corrected Field Value</label>
+          <input class="form-control" type="text" id="editFieldValue" required>
+          <p style="font-size:11.5px;color:var(--text-secondary);margin-top:6px;">
+            Submitting a correction will update normalized data, re-evaluate validation rules, and log an immutable audit event.
+          </p>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" onclick="closeModal('editFieldModal')">Cancel</button>
+        <button type="submit" class="btn btn-primary" id="saveFieldBtn">Save Correction</button>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+  let activeFieldId = null;
+
+  function openEditModal(fieldId, fieldName, currentValue) {
+    activeFieldId = fieldId;
+    document.getElementById('editFieldId').value = fieldId;
+    document.getElementById('editModalTitle').innerText = `Edit ${fieldName.replace('_', ' ').toUpperCase()}`;
+    document.getElementById('editFieldValue').value = currentValue;
+    openModal('editFieldModal');
+  }
+
+  async function handleFieldUpdate(e) {
+    e.preventDefault();
+    const btn = document.getElementById('saveFieldBtn');
+    const fieldId = document.getElementById('editFieldId').value;
+    const value = document.getElementById('editFieldValue').value.trim();
+
+    btn.disabled = true;
+    btn.innerText = 'Saving...';
+
+    try {
+      const res = await fetch(`/api/reviews/fields/${fieldId}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ value })
+      });
+
+      const data = await res.json();
+      if (res.ok) {
+        showToast('Field updated and re-validated!', 'success');
+        setTimeout(() => location.reload(), 400);
+      } else {
+        showToast(data.detail || 'Error updating field', 'error');
+        btn.disabled = false;
+        btn.innerText = 'Save Correction';
+      }
+    } catch (err) {
+      showToast('Network error saving field', 'error');
+      btn.disabled = false;
+      btn.innerText = 'Save Correction';
+    }
+  }
+
+  async function approveSingleRecord(recordId) {
+    try {
+      const res = await fetch(`/api/reviews/records/${recordId}/approve`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ force_override: false })
+      });
+      const data = await res.json();
+      if (res.ok) {
+        showToast('Record approved successfully!', 'success');
+        setTimeout(() => location.reload(), 400);
+      } else {
+        showToast(data.detail || 'Approval failed', 'error');
+      }
+    } catch (err) {
+      showToast('Network error', 'error');
+    }
+  }
+
+  async function approveAllJobRecords(jobId) {
+    if (!confirm('Approve all records and mark this job COMPLETED? Reports will be generated from approved records.')) return;
+    try {
+      const res = await fetch(`/api/reviews/jobs/${jobId}/approve`, { method: 'POST' });
+      const data = await res.json();
+      if (res.ok) {
+        showToast('All records approved! Job completed.', 'success');
+        setTimeout(() => { window.location.href = '/reports'; }, 500);
+      } else {
+        showToast(data.detail || 'Approval failed', 'error');
+      }
+    } catch (err) {
+      showToast('Network error', 'error');
+    }
+  }
+</script>
+{% endblock %}

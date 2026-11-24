@@ -6,8 +6,10 @@ from sqlalchemy.orm import Session
 from app.models.job import ProcessingJob, JobStatus, ProcessingLog
 from app.models.document import Document
 from app.models.extraction import ExtractedRecord, ExtractedField, ValidationStatus
+from app.models.validation import ValidationResult
 from app.processors import get_processor
 from app.extractors import PatternExtractor
+from app.validators import ValidationEngine
 
 
 class ProcessingService:
@@ -16,6 +18,7 @@ class ProcessingService:
     def __init__(self, db: Session):
         self.db = db
         self.extractor = PatternExtractor()
+        self.validator = ValidationEngine(db)
 
     def execute_job(self, job_id: int) -> ProcessingJob:
         """Execute a processing job through its format-specific pipeline."""
@@ -49,18 +52,40 @@ class ProcessingService:
                     extracted_fields = self.extractor.extract_from_row(row)
                     record_data = {k: v["normalized_value"] for k, v in extracted_fields.items()}
 
+                    # Run validation engine
+                    val_outcomes = self.validator.validate_record(record_data)
+                    rec_status = self.validator.compute_record_status(val_outcomes)
+
                     rec = ExtractedRecord(
                         processing_job_id=job.id,
                         record_number=idx,
                         extracted_data=record_data,
-                        validation_status=ValidationStatus.NEEDS_REVIEW,
+                        validation_status=rec_status,
                         confidence_score=0.95,
                         is_approved=False
                     )
                     self.db.add(rec)
                     self.db.flush()
 
+                    # Save validation results
+                    for v_res in val_outcomes:
+                        vr = ValidationResult(
+                            extracted_record_id=rec.id,
+                            field_name=v_res["field_name"],
+                            validation_rule=v_res["rule"],
+                            status=v_res["status"],
+                            message=v_res["message"]
+                        )
+                        self.db.add(vr)
+
                     for fname, fdata in extracted_fields.items():
+                        field_val_status = ValidationStatus.VALID
+                        # Check if any validation outcome failed for this field
+                        matching_val = [v for v in val_outcomes if v["field_name"] == fname]
+                        if matching_val:
+                            worst_status = matching_val[0]["status"]
+                            field_val_status = ValidationStatus(worst_status)
+
                         field = ExtractedField(
                             extracted_record_id=rec.id,
                             field_name=fname,
@@ -68,7 +93,8 @@ class ProcessingService:
                             normalized_value=fdata["normalized_value"],
                             confidence_score=fdata["confidence"],
                             extraction_source=fdata["source"],
-                            validation_status=ValidationStatus.VALID
+                            validation_status=field_val_status,
+                            validation_message=matching_val[0]["message"] if matching_val else None
                         )
                         self.db.add(field)
 
@@ -78,7 +104,10 @@ class ProcessingService:
                 extracted_fields = self.extractor.extract_from_text(raw_text, source=job.processing_type)
                 record_data = {k: v["normalized_value"] for k, v in extracted_fields.items()}
 
-                # Compute overall record confidence
+                # Run validation engine
+                val_outcomes = self.validator.validate_record(record_data)
+                rec_status = self.validator.compute_record_status(val_outcomes)
+
                 field_confs = [v["confidence"] for v in extracted_fields.values()]
                 avg_conf = round(sum(field_confs) / len(field_confs), 2) if field_confs else 0.85
 
@@ -86,14 +115,31 @@ class ProcessingService:
                     processing_job_id=job.id,
                     record_number=1,
                     extracted_data=record_data,
-                    validation_status=ValidationStatus.NEEDS_REVIEW,
+                    validation_status=rec_status,
                     confidence_score=avg_conf,
                     is_approved=False
                 )
                 self.db.add(rec)
                 self.db.flush()
 
+                # Save validation results
+                for v_res in val_outcomes:
+                    vr = ValidationResult(
+                        extracted_record_id=rec.id,
+                        field_name=v_res["field_name"],
+                        validation_rule=v_res["rule"],
+                        status=v_res["status"],
+                        message=v_res["message"]
+                    )
+                    self.db.add(vr)
+
                 for fname, fdata in extracted_fields.items():
+                    field_val_status = ValidationStatus.VALID
+                    matching_val = [v for v in val_outcomes if v["field_name"] == fname]
+                    if matching_val:
+                        worst_status = matching_val[0]["status"]
+                        field_val_status = ValidationStatus(worst_status)
+
                     field = ExtractedField(
                         extracted_record_id=rec.id,
                         field_name=fname,
@@ -101,7 +147,8 @@ class ProcessingService:
                         normalized_value=fdata["normalized_value"],
                         confidence_score=fdata["confidence"],
                         extraction_source=fdata["source"],
-                        validation_status=ValidationStatus.VALID
+                        validation_status=field_val_status,
+                        validation_message=matching_val[0]["message"] if matching_val else None
                     )
                     self.db.add(field)
 

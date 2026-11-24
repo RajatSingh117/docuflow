@@ -246,3 +246,51 @@ def processing_job_detail_page(
             "job": job
         }
     )
+
+
+@router.get("/processing/review", response_class=HTMLResponse)
+def review_list_page(
+    request: Request,
+    current_user: User = Depends(get_current_user_optional),
+    db: Session = Depends(get_db)
+):
+    """Render list of jobs awaiting review."""
+    if not current_user:
+        return RedirectResponse(url="/login", status_code=status.HTTP_302_FOUND)
+
+    jobs = db.query(ProcessingJob).filter(ProcessingJob.status == JobStatus.NEEDS_REVIEW).order_by(ProcessingJob.created_at.desc()).all()
+    return templates.TemplateResponse(
+        "review/index.html",
+        {
+            "request": request,
+            "current_user": current_user,
+            "active_page": "review",
+            "jobs": jobs
+        }
+    )
+
+
+@router.get("/processing/review/{job_id}", response_class=HTMLResponse)
+def review_detail_page(
+    job_id: int,
+    request: Request,
+    current_user: User = Depends(get_current_user_optional),
+    db: Session = Depends(get_db)
+):
+    """Render review and approval interface for a specific job."""
+    if not current_user:
+        return RedirectResponse(url="/login", status_code=status.HTTP_302_FOUND)
+
+    job = db.query(ProcessingJob).filter(ProcessingJob.id == job_id).first()
+    if not job:
+        return RedirectResponse(url="/processing/review", status_code=status.HTTP_302_FOUND)
+
+    return templates.TemplateResponse(
+        "review/detail.html",
+        {
+            "request": request,
+            "current_user": current_user,
+            "active_page": "review",
+            "job": job
+        }
+    )
