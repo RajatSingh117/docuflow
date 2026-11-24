@@ -1,0 +1,100 @@
+{% extends "base.html" %}
+
+{% block title %}All Documents — DocuFlow{% endblock %}
+{% block breadcrumb %}Documents{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <div>
+    <h1 class="page-title">Document Repository</h1>
+    <p class="page-subtitle">Centralized catalog of all uploaded files, checksums, and processing records.</p>
+  </div>
+  {% if current_user and current_user.role.value in ['admin', 'processing_manager'] %}
+  <a href="/documents/upload" class="btn btn-primary">
+    <svg style="width:16px;height:16px;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+    Upload Document
+  </a>
+  {% endif %}
+</div>
+
+<!-- Search & Filters -->
+<div class="card" style="margin-bottom: 20px;">
+  <div class="card-body" style="padding: 14px 20px;">
+    <form method="GET" action="/documents" style="display: flex; gap: 12px; align-items: center; flex-wrap: wrap;">
+      <div style="flex: 1; min-width: 220px;">
+        <input type="text" name="search" class="form-control" placeholder="Search by file name..." value="{{ search or '' }}">
+      </div>
+      <div style="width: 180px;">
+        <select name="file_type" class="form-control">
+          <option value="">All Formats</option>
+          <option value="pdf" {% if file_type == 'pdf' %}selected{% endif %}>PDF</option>
+          <option value="csv" {% if file_type == 'csv' %}selected{% endif %}>CSV</option>
+          <option value="xlsx" {% if file_type == 'xlsx' %}selected{% endif %}>Excel (.xlsx)</option>
+          <option value="png" {% if file_type == 'png' %}selected{% endif %}>PNG Image</option>
+          <option value="jpg" {% if file_type == 'jpg' %}selected{% endif %}>JPEG Image</option>
+        </select>
+      </div>
+      <button type="submit" class="btn btn-secondary">Filter</button>
+      {% if search or file_type %}
+      <a href="/documents" class="btn btn-secondary">Clear</a>
+      {% endif %}
+    </form>
+  </div>
+</div>
+
+<!-- Documents Table -->
+<div class="card">
+  <div class="table-responsive">
+    {% if documents %}
+    <table class="data-table">
+      <thead>
+        <tr>
+          <th>Document</th>
+          <th>Format</th>
+          <th>Size</th>
+          <th>SHA-256 Checksum</th>
+          <th>Uploaded By</th>
+          <th>Date</th>
+          <th>Action</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for doc in documents %}
+        <tr>
+          <td>
+            <strong>{{ doc.original_filename }}</strong>
+          </td>
+          <td>
+            <span class="badge" style="background:#F1F5F9;color:#334155;">{{ doc.file_type.upper() }}</span>
+          </td>
+          <td>{{ (doc.file_size / 1024)|round(1) }} KB</td>
+          <td>
+            <code style="font-size:11px;color:var(--text-secondary);" title="{{ doc.checksum }}">
+              {{ doc.checksum[:12] }}...{{ doc.checksum[-8:] }}
+            </code>
+          </td>
+          <td>{{ doc.uploader.name if doc.uploader else 'System' }}</td>
+          <td>{{ doc.uploaded_at.strftime('%Y-%m-%d %H:%M') }}</td>
+          <td>
+            <div style="display:flex;gap:6px;">
+              <a href="/documents/{{ doc.id }}" class="btn btn-secondary btn-sm">View</a>
+              <a href="/api/documents/{{ doc.id }}/download" class="btn btn-secondary btn-sm" download>Download</a>
+            </div>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    {% else %}
+    <div class="empty-state">
+      <svg class="empty-state-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+      <div class="empty-state-title">No documents found</div>
+      <div class="empty-state-desc">No uploaded documents matched your criteria. Upload a new document to get started.</div>
+      {% if current_user and current_user.role.value in ['admin', 'processing_manager'] %}
+      <a href="/documents/upload" class="btn btn-primary btn-sm">Upload Document</a>
+      {% endif %}
+    </div>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

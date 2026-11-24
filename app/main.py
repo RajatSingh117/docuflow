@@ -5,7 +5,7 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.responses import JSONResponse
 from app.config import settings
 from app.database import engine, Base
-from app.api import auth, users, analytics, views
+from app.api import auth, users, analytics, views, documents, processing
 
 
 @asynccontextmanager
@@ -32,6 +32,8 @@ app.mount("/static", StaticFiles(directory=str(static_path)), name="static")
 # Include API and View routers
 app.include_router(auth.router)
 app.include_router(users.router)
+app.include_router(documents.router)
+app.include_router(processing.router)
 app.include_router(analytics.router)
 app.include_router(views.router)
 

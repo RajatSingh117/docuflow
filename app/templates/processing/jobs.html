@@ -1,0 +1,98 @@
+{% extends "base.html" %}
+
+{% block title %}Processing Jobs — DocuFlow{% endblock %}
+{% block breadcrumb %}Processing Jobs{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <div>
+    <h1 class="page-title">Document Processing Jobs</h1>
+    <p class="page-subtitle">Queue status, real-time extraction execution, retry handling, and job audit timeline.</p>
+  </div>
+</div>
+
+<!-- Filter Tabs -->
+<div class="card" style="margin-bottom: 20px;">
+  <div class="card-body" style="padding: 12px 20px; display: flex; gap: 8px; flex-wrap: wrap;">
+    <a href="/processing/jobs" class="btn {% if not current_status %}btn-primary{% else %}btn-secondary{% endif %} btn-sm">All Jobs</a>
+    <a href="/processing/jobs?status=COMPLETED" class="btn {% if current_status == 'COMPLETED' %}btn-primary{% else %}btn-secondary{% endif %} btn-sm">Completed</a>
+    <a href="/processing/jobs?status=NEEDS_REVIEW" class="btn {% if current_status == 'NEEDS_REVIEW' %}btn-primary{% else %}btn-secondary{% endif %} btn-sm">Needs Review</a>
+    <a href="/processing/jobs?status=PROCESSING" class="btn {% if current_status == 'PROCESSING' %}btn-primary{% else %}btn-secondary{% endif %} btn-sm">Processing</a>
+    <a href="/processing/jobs?status=QUEUED" class="btn {% if current_status == 'QUEUED' %}btn-primary{% else %}btn-secondary{% endif %} btn-sm">Queued</a>
+    <a href="/processing/jobs?status=FAILED" class="btn {% if current_status == 'FAILED' %}btn-primary{% else %}btn-secondary{% endif %} btn-sm">Failed</a>
+  </div>
+</div>
+
+<!-- Jobs Table -->
+<div class="card">
+  <div class="table-responsive">
+    {% if jobs %}
+    <table class="data-table">
+      <thead>
+        <tr>
+          <th>Job Identifier</th>
+          <th>Source Document</th>
+          <th>Pipeline</th>
+          <th>Status</th>
+          <th>Duration</th>
+          <th>Retries</th>
+          <th>Created</th>
+          <th>Action</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for job in jobs %}
+        <tr>
+          <td><code>#JOB-{{ job.id }}</code></td>
+          <td>
+            <strong>{{ job.document.original_filename if job.document else 'Unknown' }}</strong>
+          </td>
+          <td><span class="badge" style="background:#F1F5F9;color:#475569;">{{ job.processing_type }}</span></td>
+          <td>
+            <span class="badge badge-{{ job.status.value.lower() }}">{{ job.status.value }}</span>
+          </td>
+          <td>{{ job.processing_duration ~ ' s' if job.processing_duration else '—' }}</td>
+          <td>{{ job.retry_count }}</td>
+          <td>{{ job.created_at.strftime('%Y-%m-%d %H:%M') }}</td>
+          <td>
+            <div style="display:flex;gap:6px;">
+              <a href="/processing/jobs/{{ job.id }}" class="btn btn-secondary btn-sm">Details</a>
+              {% if job.status.value in ['FAILED', 'CANCELLED'] and current_user and current_user.role.value in ['admin', 'processing_manager'] %}
+              <button class="btn btn-secondary btn-sm" onclick="retryJob({{ job.id }})">Retry</button>
+              {% endif %}
+            </div>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    {% else %}
+    <div class="empty-state">
+      <svg class="empty-state-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+      <div class="empty-state-title">No processing jobs found</div>
+      <div class="empty-state-desc">Jobs will appear here when documents are uploaded and submitted for extraction.</div>
+      <a href="/documents" class="btn btn-primary btn-sm">Browse Documents</a>
+    </div>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+  async function retryJob(jobId) {
+    try {
+      const res = await fetch(`/api/processing/jobs/${jobId}/retry`, { method: 'POST' });
+      const data = await res.json();
+      if (res.ok) {
+        showToast('Job queued for retry', 'success');
+        setTimeout(() => location.reload(), 400);
+      } else {
+        showToast(data.detail || 'Retry failed', 'error');
+      }
+    } catch (err) {
+      showToast('Network error', 'error');
+    }
+  }
+</script>
+{% endblock %}
