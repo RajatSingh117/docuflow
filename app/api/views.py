@@ -322,3 +322,27 @@ def reports_page(
             "completed_jobs": completed_jobs
         }
     )
+
+
+@router.get("/automation/schedules", response_class=HTMLResponse)
+def schedules_page(
+    request: Request,
+    current_user: User = Depends(get_current_user_optional),
+    db: Session = Depends(get_db)
+):
+    """Render scheduled jobs and automation management interface."""
+    if not current_user:
+        return RedirectResponse(url="/login", status_code=status.HTTP_302_FOUND)
+
+    from app.models.schedule import ScheduledJob
+    schedules = db.query(ScheduledJob).order_by(ScheduledJob.created_at.desc()).all()
+
+    return templates.TemplateResponse(
+        "schedules/index.html",
+        {
+            "request": request,
+            "current_user": current_user,
+            "active_page": "schedules",
+            "schedules": schedules
+        }
+    )
