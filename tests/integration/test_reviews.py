@@ -1,5 +1,5 @@
 import io
-import fitz
+import pymupdf as fitz
 
 
 def create_invoice_pdf():

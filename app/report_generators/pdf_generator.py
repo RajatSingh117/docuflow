@@ -1,5 +1,5 @@
 import uuid
-from datetime import datetime
+from datetime import datetime, timezone
 from pathlib import Path
 from reportlab.lib.pagesizes import letter, landscape
 from reportlab.lib import colors
@@ -83,7 +83,7 @@ class PDFReportGenerator:
                 Paragraph("<b>Processing Job ID:</b>", subtitle_style),
                 Paragraph(f"#JOB-{job.id}", cell_style),
                 Paragraph("<b>Generated Timestamp:</b>", subtitle_style),
-                Paragraph(datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S UTC"), cell_style)
+                Paragraph(datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%S UTC"), cell_style)
             ],
             [
                 Paragraph("<b>Source Document:</b>", subtitle_style),

@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, timezone
 from fastapi import APIRouter, Depends, HTTPException, status, Response, Request
 from sqlalchemy.orm import Session
 from app.database import get_db
@@ -28,7 +28,7 @@ def login(login_data: UserLogin, request: Request, response: Response, db: Sessi
         )
 
     # Update last login timestamp
-    user.last_login = datetime.utcnow()
+    user.last_login = datetime.now(timezone.utc)
 
     # Record login audit log
     client_ip = request.client.host if request.client else "unknown"

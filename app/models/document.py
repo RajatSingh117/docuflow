@@ -2,7 +2,7 @@ import enum
 from datetime import datetime
 from sqlalchemy import Column, Integer, String, BigInteger, DateTime, Enum, ForeignKey
 from sqlalchemy.orm import relationship
-from app.database import Base
+from app.database import Base, utc_now
 
 
 class UploadStatus(str, enum.Enum):
@@ -24,7 +24,7 @@ class Document(Base):
     checksum = Column(String(64), index=True, nullable=False)  # SHA-256
     storage_reference = Column(String(500), nullable=False)
     upload_status = Column(Enum(UploadStatus), default=UploadStatus.STORED, nullable=False)
-    uploaded_at = Column(DateTime, default=datetime.utcnow, nullable=False, index=True)
+    uploaded_at = Column(DateTime, default=utc_now, nullable=False, index=True)
 
     # Relationships
     uploader = relationship("User", back_populates="documents")

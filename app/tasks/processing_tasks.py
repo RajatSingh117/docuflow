@@ -1,4 +1,4 @@
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from app.tasks.celery_app import celery_app
 from app.database import SessionLocal
 from app.services.processing_service import ProcessingService
@@ -66,7 +66,7 @@ def run_scheduled_job_task(scheduled_job_id: int):
             scheduled_job_id=sched.id,
             processing_job_id=proc_job.id,
             execution_status="PROCESSING",
-            started_at=datetime.utcnow()
+            started_at=datetime.now(timezone.utc)
         )
         db.add(execution)
         db.commit()
@@ -76,11 +76,11 @@ def run_scheduled_job_task(scheduled_job_id: int):
         completed_job = service.execute_job(proc_job.id)
 
         execution.execution_status = "SUCCESS" if completed_job.status != JobStatus.FAILED else "FAILED"
-        execution.completed_at = datetime.utcnow()
+        execution.completed_at = datetime.now(timezone.utc)
         execution.error_summary = completed_job.error_summary
 
         # Update next run timestamp based on frequency
-        now = datetime.utcnow()
+        now = datetime.now(timezone.utc)
         if sched.schedule_type == "daily":
             sched.next_run_at = now + timedelta(days=1)
         elif sched.schedule_type == "weekly":

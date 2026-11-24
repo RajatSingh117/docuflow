@@ -1,7 +1,7 @@
 import io
 from typing import Dict, Any, List
 from pathlib import Path
-import fitz  # PyMuPDF
+import pymupdf  # PyMuPDF modern import
 from PIL import Image
 from app.processors.base import BaseProcessor
 from app.processors.image_processor import ImageProcessor
@@ -18,7 +18,7 @@ class PDFProcessor(BaseProcessor):
         if not path.exists():
             raise FileNotFoundError(f"PDF file not found: {file_path}")
 
-        doc = fitz.open(file_path)
+        doc = pymupdf.open(file_path)
         full_text_parts = []
         pages_info = []
 

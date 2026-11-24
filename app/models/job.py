@@ -2,7 +2,7 @@ import enum
 from datetime import datetime
 from sqlalchemy import Column, Integer, String, Float, DateTime, Enum, ForeignKey, Text, JSON
 from sqlalchemy.orm import relationship
-from app.database import Base
+from app.database import Base, utc_now
 
 
 class JobStatus(str, enum.Enum):
@@ -39,7 +39,7 @@ class ProcessingJob(Base):
     processing_duration = Column(Float, nullable=True)  # in seconds
     retry_count = Column(Integer, default=0, nullable=False)
     error_summary = Column(Text, nullable=True)
-    created_at = Column(DateTime, default=datetime.utcnow, nullable=False, index=True)
+    created_at = Column(DateTime, default=utc_now, nullable=False, index=True)
 
     # Relationships
     document = relationship("Document", back_populates="processing_jobs")
@@ -58,7 +58,7 @@ class ProcessingLog(Base):
     log_level = Column(String(20), default="INFO", nullable=False)  # INFO, WARNING, ERROR
     event_type = Column(String(50), nullable=False)  # EXTRACTION_STARTED, VALIDATION_FAILED, etc.
     message = Column(Text, nullable=False)
-    created_at = Column(DateTime, default=datetime.utcnow, nullable=False, index=True)
+    created_at = Column(DateTime, default=utc_now, nullable=False, index=True)
 
     # Relationships
     job = relationship("ProcessingJob", back_populates="logs")

@@ -65,6 +65,17 @@ def create_processing_job(
     if not doc:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Target document not found.")
 
+    # Prevent accidental duplicate execution if job is already queued or processing
+    active_job = db.query(ProcessingJob).filter(
+        ProcessingJob.document_id == doc.id,
+        ProcessingJob.status.in_([JobStatus.QUEUED, JobStatus.PROCESSING])
+    ).first()
+    if active_job:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail=f"An active processing job (#JOB-{active_job.id}) is already {active_job.status.value.lower()} for document '{doc.original_filename}'."
+        )
+
     # Determine processing type if set to auto
     pipeline_type = job_in.processing_type or "auto"
     if pipeline_type == "auto":

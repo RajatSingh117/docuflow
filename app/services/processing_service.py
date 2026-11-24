@@ -1,5 +1,5 @@
 import time
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Dict, Any, List
 from sqlalchemy.orm import Session
 
@@ -28,7 +28,7 @@ class ProcessingService:
 
         start_time = time.time()
         job.status = JobStatus.PROCESSING
-        job.started_at = datetime.utcnow()
+        job.started_at = datetime.now(timezone.utc)
 
         self._log(job.id, "INFO", "PROCESSING_STARTED", f"Execution started for pipeline '{job.processing_type}'.")
         self.db.commit()
@@ -155,7 +155,7 @@ class ProcessingService:
 
             # Update job status
             job.status = JobStatus.NEEDS_REVIEW
-            job.completed_at = datetime.utcnow()
+            job.completed_at = datetime.now(timezone.utc)
             job.processing_duration = round(time.time() - start_time, 2)
             self._log(
                 job.id,
@@ -171,7 +171,7 @@ class ProcessingService:
             self.db.rollback()
             job.status = JobStatus.FAILED
             job.error_summary = str(e)
-            job.completed_at = datetime.utcnow()
+            job.completed_at = datetime.now(timezone.utc)
             job.processing_duration = round(time.time() - start_time, 2)
             self._log(job.id, "ERROR", "PROCESSING_FAILED", f"Job failed: {str(e)}")
             self.db.commit()

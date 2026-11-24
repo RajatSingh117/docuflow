@@ -1,7 +1,7 @@
 from datetime import datetime
 from sqlalchemy import Column, Integer, String, DateTime, ForeignKey
 from sqlalchemy.orm import relationship
-from app.database import Base
+from app.database import Base, utc_now
 
 
 class GeneratedReport(Base):
@@ -13,7 +13,7 @@ class GeneratedReport(Base):
     filename = Column(String(255), nullable=False)
     storage_reference = Column(String(500), nullable=False)
     generated_by = Column(Integer, ForeignKey("users.id", ondelete="SET NULL"), nullable=True)
-    created_at = Column(DateTime, default=datetime.utcnow, nullable=False, index=True)
+    created_at = Column(DateTime, default=utc_now, nullable=False, index=True)
 
     # Relationships
     job = relationship("ProcessingJob", back_populates="reports")

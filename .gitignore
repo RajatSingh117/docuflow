@@ -31,7 +31,8 @@ storage/reports/*
 
 # Environment & Secrets
 .env
-.env.local
+.env.*
+!.env.example
 *.sqlite
 *.sqlite3
 *.db

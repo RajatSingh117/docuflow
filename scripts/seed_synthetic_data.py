@@ -6,7 +6,7 @@ from pathlib import Path
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-import fitz  # PyMuPDF
+import pymupdf  # PyMuPDF modern import
 import pandas as pd
 from PIL import Image, ImageDraw
 
@@ -27,7 +27,7 @@ def create_sample_files():
     os.makedirs("samples/images", exist_ok=True)
 
     # 1. Synthetic PDF Invoice 1
-    doc1 = fitz.open()
+    doc1 = pymupdf.open()
     page1 = doc1.new_page(width=595, height=842)
     invoice_1_text = """
     INVOICE
@@ -60,7 +60,7 @@ def create_sample_files():
     doc1.close()
 
     # 2. Synthetic PDF Invoice 2
-    doc2 = fitz.open()
+    doc2 = pymupdf.open()
     page2 = doc2.new_page(width=595, height=842)
     invoice_2_text = """
     TAX INVOICE

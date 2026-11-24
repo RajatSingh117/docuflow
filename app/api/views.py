@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, timezone
 from fastapi import APIRouter, Request, Depends, HTTPException, status
 from fastapi.responses import HTMLResponse, RedirectResponse
 from fastapi.templating import Jinja2Templates
@@ -40,7 +40,7 @@ def dashboard_page(
             "current_user": current_user,
             "active_page": "dashboard",
             "metrics": metrics,
-            "current_time": datetime.utcnow().strftime("%Y-%m-%d %H:%M UTC")
+            "current_time": datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M UTC")
         }
     )
 
@@ -338,6 +338,6 @@ def analytics_page(
             "current_user": current_user,
             "active_page": "analytics",
             "analytics": analytics,
-            "current_time": datetime.utcnow().strftime("%Y-%m-%d %H:%M UTC")
+            "current_time": datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M UTC")
         }
     )

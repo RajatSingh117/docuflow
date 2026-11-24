@@ -5,6 +5,7 @@ from fastapi.responses import FileResponse
 from sqlalchemy.orm import Session
 from sqlalchemy import or_
 
+from app.config import settings
 from app.database import get_db
 from app.models.document import Document, UploadStatus
 from app.models.user import User, UserRole
@@ -73,11 +74,14 @@ async def upload_document(
     canonical_type = validate_file_content(file.filename or "", content)
     checksum = calculate_sha256(content)
 
-    # Check for duplicate file
+    # Check for duplicate file using SHA-256
     existing = check_duplicate_document(db, checksum)
     if existing:
-        # Return existing document or flag duplicate
-        pass
+        await file.close()
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail=f"Duplicate document detected. This file has already been uploaded as '{existing.original_filename}' (Document #{existing.id})."
+        )
 
     orig_name, stored_name, storage_ref, file_size = save_uploaded_file(file, content)
 
@@ -163,7 +167,7 @@ def download_document(
 
     file_path = Path(doc.storage_reference).resolve()
     # Path traversal protection: Ensure path is strictly within storage directory
-    storage_root = Path("./storage").resolve()
+    storage_root = Path(settings.STORAGE_DIR).resolve()
     if not str(file_path).startswith(str(storage_root)):
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid storage path traversal.")
 

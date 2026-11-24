@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Dict, Any, Optional
 from fastapi import HTTPException, status
 from sqlalchemy.orm import Session
@@ -119,7 +119,7 @@ class ReviewService:
                 )
 
         record.is_approved = True
-        record.updated_at = datetime.utcnow()
+        record.updated_at = datetime.now(timezone.utc)
 
         audit = AuditLog(
             user_id=user.id,

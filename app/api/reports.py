@@ -129,7 +129,7 @@ def download_report(
 
     file_path = Path(rep.storage_reference).resolve()
     # Path traversal validation
-    storage_root = Path("./storage").resolve()
+    storage_root = Path(settings.STORAGE_DIR).resolve()
     if not str(file_path).startswith(str(storage_root)):
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid path traversal detected.")
 

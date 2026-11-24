@@ -1,5 +1,5 @@
 import uuid
-from datetime import datetime
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import Dict, Any, List
 import openpyxl
@@ -39,7 +39,7 @@ class ExcelReportGenerator:
         ws["A3"] = "Processing Job ID:"
         ws["B3"] = f"#JOB-{job.id}"
         ws["D3"] = "Generated At:"
-        ws["E3"] = datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S UTC")
+        ws["E3"] = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%S UTC")
 
         ws["A4"] = "Source Document:"
         ws["B4"] = doc_name

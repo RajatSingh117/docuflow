@@ -1,4 +1,4 @@
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from typing import List, Optional, Dict, Any
 from pydantic import BaseModel
 from fastapi import APIRouter, Depends, HTTPException, status, Request
@@ -68,7 +68,7 @@ def create_schedule(
             detail="Schedule type must be 'daily', 'weekly', or 'monthly'."
         )
 
-    now = datetime.utcnow()
+    now = datetime.now(timezone.utc)
     if stype == "daily":
         next_run = now + timedelta(days=1)
     elif stype == "weekly":

@@ -1,5 +1,5 @@
 import io
-import fitz
+import pymupdf as fitz
 from app.models.job import JobStatus
 
 

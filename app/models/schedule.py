@@ -1,7 +1,7 @@
 from datetime import datetime
 from sqlalchemy import Column, Integer, String, Boolean, DateTime, ForeignKey, Text, JSON
 from sqlalchemy.orm import relationship
-from app.database import Base
+from app.database import Base, utc_now
 
 
 class ScheduledJob(Base):
@@ -14,8 +14,8 @@ class ScheduledJob(Base):
     schedule_configuration = Column(JSON, nullable=True)  # cron details, target file type, etc.
     is_active = Column(Boolean, default=True, nullable=False)
     next_run_at = Column(DateTime, nullable=True)
-    created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
-    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False)
+    created_at = Column(DateTime, default=utc_now, nullable=False)
+    updated_at = Column(DateTime, default=utc_now, onupdate=utc_now, nullable=False)
 
     # Relationships
     creator = relationship("User", back_populates="scheduled_jobs")
@@ -29,7 +29,7 @@ class ScheduledJobExecution(Base):
     scheduled_job_id = Column(Integer, ForeignKey("scheduled_jobs.id", ondelete="CASCADE"), nullable=False, index=True)
     processing_job_id = Column(Integer, ForeignKey("processing_jobs.id", ondelete="SET NULL"), nullable=True)
     execution_status = Column(String(50), default="SUCCESS", nullable=False)  # SUCCESS, FAILED
-    started_at = Column(DateTime, default=datetime.utcnow, nullable=False)
+    started_at = Column(DateTime, default=utc_now, nullable=False)
     completed_at = Column(DateTime, nullable=True)
     error_summary = Column(Text, nullable=True)
 

@@ -2,7 +2,7 @@ import enum
 from datetime import datetime
 from sqlalchemy import Column, Integer, String, Float, Boolean, DateTime, Enum, ForeignKey, Text, JSON
 from sqlalchemy.orm import relationship
-from app.database import Base
+from app.database import Base, utc_now
 
 
 class ValidationStatus(str, enum.Enum):
@@ -23,8 +23,8 @@ class ExtractedRecord(Base):
     validation_status = Column(Enum(ValidationStatus), default=ValidationStatus.NEEDS_REVIEW, nullable=False, index=True)
     confidence_score = Column(Float, default=1.0, nullable=False)
     is_approved = Column(Boolean, default=False, nullable=False)
-    created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
-    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False)
+    created_at = Column(DateTime, default=utc_now, nullable=False)
+    updated_at = Column(DateTime, default=utc_now, onupdate=utc_now, nullable=False)
 
     # Relationships
     job = relationship("ProcessingJob", back_populates="extracted_records")
