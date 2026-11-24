@@ -1,0 +1,170 @@
+{% extends "base.html" %}
+
+{% block title %}User Management — DocuFlow{% endblock %}
+{% block breadcrumb %}User Management{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <div>
+    <h1 class="page-title">User Management</h1>
+    <p class="page-subtitle">Manage system users, access credentials, and role-based permissions.</p>
+  </div>
+  <button class="btn btn-primary" onclick="openModal('addUserModal')">
+    <svg style="width:16px;height:16px;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z"/></svg>
+    Add New User
+  </button>
+</div>
+
+<div class="card">
+  <div class="card-header">
+    <h2 class="card-title">Registered System Users</h2>
+    <span style="font-size:12px;color:var(--text-secondary);">Controlled by Administrator</span>
+  </div>
+  <div class="table-responsive">
+    <table class="data-table">
+      <thead>
+        <tr>
+          <th>User Name</th>
+          <th>Email Address</th>
+          <th>Assigned Role</th>
+          <th>Account Status</th>
+          <th>Created Date</th>
+          <th>Last Login</th>
+          <th>Action</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for u in users %}
+        <tr>
+          <td>
+            <strong>{{ u.name }}</strong>
+            {% if u.id == current_user.id %}
+            <span style="font-size:11px;color:var(--primary-accent);margin-left:6px;">(You)</span>
+            {% endif %}
+          </td>
+          <td>{{ u.email }}</td>
+          <td>
+            <span class="badge" style="background:#EEF2FF;color:#4338CA;">
+              {{ u.role.value.replace('_', ' ') }}
+            </span>
+          </td>
+          <td>
+            {% if u.is_active %}
+            <span class="badge badge-success">Active</span>
+            {% else %}
+            <span class="badge badge-error">Inactive</span>
+            {% endif %}
+          </td>
+          <td>{{ u.created_at.strftime('%Y-%m-%d') }}</td>
+          <td>{{ u.last_login.strftime('%Y-%m-%d %H:%M') if u.last_login else 'Never' }}</td>
+          <td>
+            {% if u.id != current_user.id %}
+            <button class="btn btn-secondary btn-sm" onclick="toggleUserStatus({{ u.id }}, {{ 'false' if u.is_active else 'true' }})">
+              {{ 'Deactivate' if u.is_active else 'Activate' }}
+            </button>
+            {% else %}
+            <span style="font-size:12px;color:var(--text-secondary);">—</span>
+            {% endif %}
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- Add User Modal -->
+<div id="addUserModal" class="modal-backdrop">
+  <div class="modal-dialog">
+    <div class="modal-header">
+      <h3 class="modal-title">Create New User Account</h3>
+      <button onclick="closeModal('addUserModal')" style="background:none;border:none;cursor:pointer;font-size:18px;">✕</button>
+    </div>
+    <form onsubmit="handleCreateUser(event)">
+      <div class="modal-body">
+        <div class="form-group">
+          <label class="form-label" for="newName">Full Name</label>
+          <input class="form-control" type="text" id="newName" required placeholder="John Doe">
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="newEmail">Email Address</label>
+          <input class="form-control" type="email" id="newEmail" required placeholder="user@company.com">
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="newPassword">Initial Password</label>
+          <input class="form-control" type="password" id="newPassword" required placeholder="••••••••" minlength="6">
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="newRole">Role</label>
+          <select class="form-control" id="newRole">
+            <option value="viewer">Viewer (Read-only)</option>
+            <option value="processing_manager">Processing Manager (Upload, Review, Export)</option>
+            <option value="admin">Administrator (Full Access)</option>
+          </select>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" onclick="closeModal('addUserModal')">Cancel</button>
+        <button type="submit" class="btn btn-primary" id="saveUserBtn">Create User</button>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+  async function handleCreateUser(e) {
+    e.preventDefault();
+    const name = document.getElementById('newName').value.trim();
+    const email = document.getElementById('newEmail').value.trim();
+    const password = document.getElementById('newPassword').value;
+    const role = document.getElementById('newRole').value;
+    const btn = document.getElementById('saveUserBtn');
+
+    btn.disabled = true;
+    btn.innerText = 'Creating...';
+
+    try {
+      const res = await fetch('/api/auth/register', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name, email, password, role, is_active: true })
+      });
+      const data = await res.json();
+      if (res.ok) {
+        showToast('User created successfully!', 'success');
+        setTimeout(() => location.reload(), 500);
+      } else {
+        showToast(data.detail || 'Failed to create user', 'error');
+        btn.disabled = false;
+        btn.innerText = 'Create User';
+      }
+    } catch (err) {
+      showToast('Network error creating user', 'error');
+      btn.disabled = false;
+      btn.innerText = 'Create User';
+    }
+  }
+
+  async function toggleUserStatus(userId, makeActive) {
+    if (!confirm(`Are you sure you want to ${makeActive ? 'activate' : 'deactivate'} this user?`)) return;
+    try {
+      const res = await fetch(`/api/users/${userId}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ is_active: makeActive })
+      });
+      if (res.ok) {
+        showToast(`User ${makeActive ? 'activated' : 'deactivated'}`, 'success');
+        setTimeout(() => location.reload(), 400);
+      } else {
+        const data = await res.json();
+        showToast(data.detail || 'Error updating user', 'error');
+      }
+    } catch (err) {
+      showToast('Network error', 'error');
+    }
+  }
+</script>
+{% endblock %}

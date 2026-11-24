@@ -1,0 +1,282 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard — DocuFlow{% endblock %}
+{% block breadcrumb %}Dashboard{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <div>
+    <h1 class="page-title">Executive Dashboard</h1>
+    <p class="page-subtitle">Real-time document processing metrics, system throughput, and operational health.</p>
+  </div>
+  {% if current_user and current_user.role.value in ['admin', 'processing_manager'] %}
+  <a href="/documents/upload" class="btn btn-primary">
+    <svg style="width:16px;height:16px;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+    Upload New Document
+  </a>
+  {% endif %}
+</div>
+
+<!-- 6 KPI Summary Cards (PRD Section 3.2) -->
+<div class="grid-cards">
+  <!-- Card 1: Total Documents -->
+  <div class="stat-card">
+    <div class="stat-header">
+      <span>Total Documents</span>
+      <svg style="width:18px;height:18px;color:#6366F1;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+    </div>
+    <div class="stat-value">{{ metrics.total_documents }}</div>
+    <div class="stat-footer">Stored in database</div>
+  </div>
+
+  <!-- Card 2: Successfully Processed -->
+  <div class="stat-card">
+    <div class="stat-header">
+      <span>Successfully Processed</span>
+      <svg style="width:18px;height:18px;color:#16A34A;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+    </div>
+    <div class="stat-value" style="color:var(--success);">{{ metrics.successfully_processed }}</div>
+    <div class="stat-footer">{{ metrics.success_rate }}% completion rate</div>
+  </div>
+
+  <!-- Card 3: Processing in Progress -->
+  <div class="stat-card">
+    <div class="stat-header">
+      <span>In Progress / Queued</span>
+      <svg style="width:18px;height:18px;color:#4F46E5;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
+    </div>
+    <div class="stat-value">{{ metrics.processing_in_progress }}</div>
+    <div class="stat-footer">Active worker tasks</div>
+  </div>
+
+  <!-- Card 4: Failed Jobs -->
+  <div class="stat-card">
+    <div class="stat-header">
+      <span>Failed Jobs</span>
+      <svg style="width:18px;height:18px;color:#DC2626;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+    </div>
+    <div class="stat-value" style="color:var(--error);">{{ metrics.failed_jobs }}</div>
+    <div class="stat-footer">{{ metrics.failure_rate }}% failure rate</div>
+  </div>
+
+  <!-- Card 5: Documents Awaiting Review -->
+  <div class="stat-card">
+    <div class="stat-header">
+      <span>Awaiting Review</span>
+      <svg style="width:18px;height:18px;color:#D97706;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
+    </div>
+    <div class="stat-value" style="color:var(--warning);">{{ metrics.awaiting_review }}</div>
+    <div class="stat-footer">Pending approval</div>
+  </div>
+
+  <!-- Card 6: Average Processing Time -->
+  <div class="stat-card">
+    <div class="stat-header">
+      <span>Avg Processing Time</span>
+      <svg style="width:18px;height:18px;color:#2563EB;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+    </div>
+    <div class="stat-value">{{ metrics.average_processing_time }}<span style="font-size:14px;font-weight:500;color:var(--text-secondary);"> s</span></div>
+    <div class="stat-footer">Per completed document</div>
+  </div>
+</div>
+
+<!-- Visualizations Grid -->
+<div class="charts-grid">
+  <!-- Chart 1: Processing Status Distribution -->
+  <div class="card">
+    <div class="card-header">
+      <h2 class="card-title">Processing Status Distribution</h2>
+      <span style="font-size:12px;color:var(--text-secondary);">Real database counts</span>
+    </div>
+    <div class="card-body" style="height: 280px; display: flex; align-items: center; justify-content: center;">
+      {% if metrics.status_distribution %}
+      <canvas id="statusChart"></canvas>
+      {% else %}
+      <div class="empty-state">
+        <div class="empty-state-title">No processing jobs recorded yet</div>
+        <div class="empty-state-desc">Upload documents and initiate extraction to visualize status breakdowns.</div>
+      </div>
+      {% endif %}
+    </div>
+  </div>
+
+  <!-- Chart 2: File Type Distribution -->
+  <div class="card">
+    <div class="card-header">
+      <h2 class="card-title">Ingested File Types</h2>
+      <span style="font-size:12px;color:var(--text-secondary);">PDF, CSV, XLSX, Images</span>
+    </div>
+    <div class="card-body" style="height: 280px; display: flex; align-items: center; justify-content: center;">
+      {% if metrics.file_type_distribution %}
+      <canvas id="fileTypeChart"></canvas>
+      {% else %}
+      <div class="empty-state">
+        <div class="empty-state-title">No documents in catalog</div>
+        <div class="empty-state-desc">Ingest supported documents to see file distribution.</div>
+      </div>
+      {% endif %}
+    </div>
+  </div>
+</div>
+
+<!-- Tables Section -->
+<div style="display: flex; flex-direction: column; gap: 24px;">
+  <!-- Recent Documents Table -->
+  <div class="card">
+    <div class="card-header">
+      <h2 class="card-title">Recent Ingested Documents</h2>
+      <a href="/documents" class="btn btn-secondary btn-sm">View All</a>
+    </div>
+    <div class="table-responsive">
+      {% if metrics.recent_documents %}
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>File Name</th>
+            <th>Type</th>
+            <th>Size</th>
+            <th>Uploaded By</th>
+            <th>Upload Date</th>
+            <th>Status</th>
+            <th>Action</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for doc in metrics.recent_documents %}
+          <tr>
+            <td>
+              <strong style="color:var(--text-main);">{{ doc.original_filename }}</strong>
+            </td>
+            <td><span class="badge" style="background:#F1F5F9;color:#475569;">{{ doc.file_type.upper() }}</span></td>
+            <td>{{ (doc.file_size / 1024)|round(1) }} KB</td>
+            <td>{{ doc.uploader.name if doc.uploader else 'System' }}</td>
+            <td>{{ doc.uploaded_at.strftime('%Y-%m-%d %H:%M') }}</td>
+            <td>
+              <span class="badge badge-{{ doc.upload_status.value.lower() }}">{{ doc.upload_status.value }}</span>
+            </td>
+            <td>
+              <a href="/documents/{{ doc.id }}" class="btn btn-secondary btn-sm">Details</a>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+      {% else %}
+      <div class="empty-state">
+        <svg class="empty-state-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"/></svg>
+        <div class="empty-state-title">No documents uploaded yet</div>
+        <div class="empty-state-desc">Get started by uploading PDFs, images, CSVs, or Excel files into DocuFlow.</div>
+        {% if current_user and current_user.role.value in ['admin', 'processing_manager'] %}
+        <a href="/documents/upload" class="btn btn-primary btn-sm">Upload Your First Document</a>
+        {% endif %}
+      </div>
+      {% endif %}
+    </div>
+  </div>
+
+  <!-- Recent Processing Jobs Table -->
+  <div class="card">
+    <div class="card-header">
+      <h2 class="card-title">Recent Processing Jobs</h2>
+      <a href="/processing/jobs" class="btn btn-secondary btn-sm">View All</a>
+    </div>
+    <div class="table-responsive">
+      {% if metrics.recent_jobs %}
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>Job ID</th>
+            <th>Document Name</th>
+            <th>Pipeline Type</th>
+            <th>Status</th>
+            <th>Started At</th>
+            <th>Duration</th>
+            <th>Action</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for job in metrics.recent_jobs %}
+          <tr>
+            <td><code>#JOB-{{ job.id }}</code></td>
+            <td><strong>{{ job.document.original_filename if job.document else 'Unknown' }}</strong></td>
+            <td>{{ job.processing_type }}</td>
+            <td>
+              <span class="badge badge-{{ job.status.value.lower() }}">{{ job.status.value }}</span>
+            </td>
+            <td>{{ job.started_at.strftime('%Y-%m-%d %H:%M') if job.started_at else 'Queued' }}</td>
+            <td>{{ job.processing_duration ~ 's' if job.processing_duration else '—' }}</td>
+            <td>
+              <a href="/processing/jobs/{{ job.id }}" class="btn btn-secondary btn-sm">View Job</a>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+      {% else %}
+      <div class="empty-state">
+        <svg class="empty-state-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+        <div class="empty-state-title">No processing jobs executed yet</div>
+        <div class="empty-state-desc">Jobs will appear here as documents are ingested and processed.</div>
+      </div>
+      {% endif %}
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+  {% if metrics.status_distribution %}
+  const statusLabels = {{ metrics.status_distribution.keys()|list|tojson }};
+  const statusData = {{ metrics.status_distribution.values()|list|tojson }};
+  const statusColors = ['#16A34A', '#4F46E5', '#D97706', '#DC2626', '#64748B'];
+
+  new Chart(document.getElementById('statusChart'), {
+    type: 'doughnut',
+    data: {
+      labels: statusLabels,
+      datasets: [{
+        data: statusData,
+        backgroundColor: statusColors,
+        borderWidth: 0
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: { position: 'right' }
+      }
+    }
+  });
+  {% endif %}
+
+  {% if metrics.file_type_distribution %}
+  const fileLabels = {{ metrics.file_type_distribution.keys()|list|tojson }};
+  const fileData = {{ metrics.file_type_distribution.values()|list|tojson }};
+
+  new Chart(document.getElementById('fileTypeChart'), {
+    type: 'bar',
+    data: {
+      labels: fileLabels.map(l => l.toUpperCase()),
+      datasets: [{
+        label: 'Documents',
+        data: fileData,
+        backgroundColor: '#4F46E5',
+        borderRadius: 4
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: { display: false }
+      },
+      scales: {
+        y: { beginAtZero: true, ticks: { precision: 0 } }
+      }
+    }
+  });
+  {% endif %}
+</script>
+{% endblock %}
