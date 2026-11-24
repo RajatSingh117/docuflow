@@ -39,7 +39,8 @@ class ProcessingService:
                 raise ValueError("Associated document missing.")
 
             # 1. Format-specific processing
-            processor = get_processor(job.processing_type or doc.file_type)
+            pipeline_key = doc.file_type if (not job.processing_type or job.processing_type.lower() == "auto") else job.processing_type
+            processor = get_processor(pipeline_key)
             result = processor.process(doc.storage_reference, job.extraction_configuration)
             self._log(job.id, "INFO", "CONTENT_EXTRACTED", f"Extracted content successfully using {result['metadata']['processor']}.")
 

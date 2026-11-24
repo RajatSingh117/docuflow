@@ -1,0 +1,4 @@
+invoice_number,invoice_date,due_date,company_name,email,total_amount,tax_amount
+INV-CSV-101,2026-01-10,2026-02-10,Atlas Cloud Inc,billing@atlascloud.com,1250.0,125.0
+INV-CSV-102,2026-01-15,2026-02-15,Beacon Media LLC,accounts@beaconmedia.com,3400.5,340.05
+INV-CSV-103,2026-01-20,2026-02-20,Crestview Partners,finance@crestview.org,920.0,92.0

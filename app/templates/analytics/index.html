@@ -1,0 +1,171 @@
+{% extends "base.html" %}
+
+{% block title %}Operational Analytics & KPIs — DocuFlow{% endblock %}
+
+{% block content %}
+<div class="page-header" style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 24px;">
+  <div>
+    <h1 style="font-size: 24px; font-weight: 700; color: #111827; margin: 0 0 4px 0;">Operational Analytics & KPIs</h1>
+    <p style="font-size: 14px; color: #6B7280; margin: 0;">Comprehensive throughput, accuracy metrics, and extraction performance across document types.</p>
+  </div>
+  <div style="font-size: 12px; color: #9CA3AF; padding: 6px 12px; background: #F3F4F6; border-radius: 6px;">
+    Last updated: {{ current_time }}
+  </div>
+</div>
+
+<!-- Primary KPI Cards -->
+<div class="metrics-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px; margin-bottom: 24px;">
+  <div class="card" style="padding: 20px;">
+    <div style="font-size: 12px; font-weight: 600; text-transform: uppercase; color: #6B7280; margin-bottom: 8px;">Success Rate</div>
+    <div style="font-size: 28px; font-weight: 700; color: {% if analytics.success_rate >= 80 %}#059669{% else %}#D97706{% endif %};">
+      {{ analytics.success_rate }}%
+    </div>
+    <div style="font-size: 12px; color: #9CA3AF; margin-top: 4px;">{{ analytics.successfully_processed }} completed / {{ analytics.failed_jobs }} failed</div>
+  </div>
+
+  <div class="card" style="padding: 20px;">
+    <div style="font-size: 12px; font-weight: 600; text-transform: uppercase; color: #6B7280; margin-bottom: 8px;">Avg Processing Time</div>
+    <div style="font-size: 28px; font-weight: 700; color: #111827;">
+      {{ analytics.average_processing_time }}s
+    </div>
+    <div style="font-size: 12px; color: #9CA3AF; margin-top: 4px;">Across all completed jobs</div>
+  </div>
+
+  <div class="card" style="padding: 20px;">
+    <div style="font-size: 12px; font-weight: 600; text-transform: uppercase; color: #6B7280; margin-bottom: 8px;">Extraction Accuracy</div>
+    <div style="font-size: 28px; font-weight: 700; color: #4F46E5;">
+      {{ analytics.validation_stats.accuracy_rate }}%
+    </div>
+    <div style="font-size: 12px; color: #9CA3AF; margin-top: 4px;">{{ analytics.validation_stats.valid }} valid fields of {{ analytics.confidence_stats.total_fields }}</div>
+  </div>
+
+  <div class="card" style="padding: 20px;">
+    <div style="font-size: 12px; font-weight: 600; text-transform: uppercase; color: #6B7280; margin-bottom: 8px;">Avg Confidence Score</div>
+    <div style="font-size: 28px; font-weight: 700; color: #111827;">
+      {{ (analytics.confidence_stats.avg_confidence * 100)|round(1) }}%
+    </div>
+    <div style="font-size: 12px; color: #9CA3AF; margin-top: 4px;">Score: {{ analytics.confidence_stats.avg_confidence }} / 1.0</div>
+  </div>
+
+  <div class="card" style="padding: 20px;">
+    <div style="font-size: 12px; font-weight: 600; text-transform: uppercase; color: #6B7280; margin-bottom: 8px;">Reports Generated</div>
+    <div style="font-size: 28px; font-weight: 700; color: #111827;">
+      {{ analytics.report_stats.total_reports }}
+    </div>
+    <div style="font-size: 12px; color: #9CA3AF; margin-top: 4px;">{{ analytics.report_stats.excel_reports }} Excel / {{ analytics.report_stats.pdf_reports }} PDF</div>
+  </div>
+</div>
+
+<!-- Two-Column Analytics Layout -->
+<div style="display: grid; grid-template-columns: 2fr 1fr; gap: 24px; margin-bottom: 24px;">
+
+  <!-- Performance by File Type -->
+  <div class="card" style="padding: 24px;">
+    <h2 style="font-size: 16px; font-weight: 600; color: #111827; margin: 0 0 16px 0;">Pipeline Performance by Document Format</h2>
+    {% if analytics.by_file_type %}
+    <div class="table-container">
+      <table class="data-table" style="width: 100%;">
+        <thead>
+          <tr>
+            <th>Format</th>
+            <th>Total Jobs</th>
+            <th>Success</th>
+            <th>Failed</th>
+            <th>Success Rate</th>
+            <th>Avg Duration</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for item in analytics.by_file_type %}
+          <tr>
+            <td>
+              <span class="badge badge-gray" style="font-weight: 600;">{{ item.file_type }}</span>
+            </td>
+            <td><strong>{{ item.total_jobs }}</strong></td>
+            <td style="color: #059669;">{{ item.completed }}</td>
+            <td style="color: {% if item.failed > 0 %}#DC2626{% else %}#9CA3AF{% endif %};">{{ item.failed }}</td>
+            <td>
+              <div style="display: flex; align-items: center; gap: 8px;">
+                <div style="flex: 1; height: 6px; background: #E5E7EB; border-radius: 3px; overflow: hidden; min-width: 60px;">
+                  <div style="height: 100%; width: {{ item.success_rate }}%; background: {% if item.success_rate >= 80 %}#10B981{% elif item.success_rate >= 50 %}#F59E0B{% else %}#EF4444{% endif %};"></div>
+                </div>
+                <span style="font-size: 12px; font-weight: 500; min-width: 36px;">{{ item.success_rate }}%</span>
+              </div>
+            </td>
+            <td>{{ item.avg_duration }}s</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% else %}
+    <div style="text-align: center; padding: 32px 16px; color: #9CA3AF;">
+      No file-type job execution history available yet.
+    </div>
+    {% endif %}
+  </div>
+
+  <!-- Quality & Confidence Breakdown -->
+  <div class="card" style="padding: 24px;">
+    <h2 style="font-size: 16px; font-weight: 600; color: #111827; margin: 0 0 16px 0;">Confidence Score Distribution</h2>
+    
+    <div style="display: flex; flex-direction: column; gap: 16px;">
+      <div>
+        <div style="display: flex; justify-content: space-between; font-size: 13px; margin-bottom: 4px;">
+          <span style="font-weight: 500; color: #059669;">High Confidence (&ge; 85%)</span>
+          <span style="font-weight: 600;">{{ analytics.confidence_stats.high_confidence_count }}</span>
+        </div>
+        <div style="height: 8px; background: #E5E7EB; border-radius: 4px; overflow: hidden;">
+          {% set high_pct = (analytics.confidence_stats.high_confidence_count / analytics.confidence_stats.total_fields * 100) if analytics.confidence_stats.total_fields > 0 else 0 %}
+          <div style="height: 100%; width: {{ high_pct }}%; background: #10B981;"></div>
+        </div>
+      </div>
+
+      <div>
+        <div style="display: flex; justify-content: space-between; font-size: 13px; margin-bottom: 4px;">
+          <span style="font-weight: 500; color: #D97706;">Medium Confidence (60% - 84%)</span>
+          <span style="font-weight: 600;">{{ analytics.confidence_stats.medium_confidence_count }}</span>
+        </div>
+        <div style="height: 8px; background: #E5E7EB; border-radius: 4px; overflow: hidden;">
+          {% set med_pct = (analytics.confidence_stats.medium_confidence_count / analytics.confidence_stats.total_fields * 100) if analytics.confidence_stats.total_fields > 0 else 0 %}
+          <div style="height: 100%; width: {{ med_pct }}%; background: #F59E0B;"></div>
+        </div>
+      </div>
+
+      <div>
+        <div style="display: flex; justify-content: space-between; font-size: 13px; margin-bottom: 4px;">
+          <span style="font-weight: 500; color: #DC2626;">Low / Flagged (&lt; 60%)</span>
+          <span style="font-weight: 600;">{{ analytics.confidence_stats.low_confidence_count }}</span>
+        </div>
+        <div style="height: 8px; background: #E5E7EB; border-radius: 4px; overflow: hidden;">
+          {% set low_pct = (analytics.confidence_stats.low_confidence_count / analytics.confidence_stats.total_fields * 100) if analytics.confidence_stats.total_fields > 0 else 0 %}
+          <div style="height: 100%; width: {{ low_pct }}%; background: #EF4444;"></div>
+        </div>
+      </div>
+    </div>
+
+    <div style="margin-top: 24px; padding-top: 16px; border-top: 1px solid #E5E7EB;">
+      <h3 style="font-size: 14px; font-weight: 600; color: #374151; margin: 0 0 12px 0;">Validation Field Health</h3>
+      <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px;">
+        <div style="background: #F0FDF4; border: 1px solid #BBF7D0; padding: 10px; border-radius: 6px;">
+          <div style="font-size: 11px; font-weight: 600; color: #166534;">VALID</div>
+          <div style="font-size: 18px; font-weight: 700; color: #166534;">{{ analytics.validation_stats.valid }}</div>
+        </div>
+        <div style="background: #FEF2F2; border: 1px solid #FECACA; padding: 10px; border-radius: 6px;">
+          <div style="font-size: 11px; font-weight: 600; color: #991B1B;">INVALID</div>
+          <div style="font-size: 18px; font-weight: 700; color: #991B1B;">{{ analytics.validation_stats.invalid }}</div>
+        </div>
+        <div style="background: #FFFBEB; border: 1px solid #FDE68A; padding: 10px; border-radius: 6px;">
+          <div style="font-size: 11px; font-weight: 600; color: #92400E;">WARNING</div>
+          <div style="font-size: 18px; font-weight: 700; color: #92400E;">{{ analytics.validation_stats.warning }}</div>
+        </div>
+        <div style="background: #F8FAFC; border: 1px solid #E2E8F0; padding: 10px; border-radius: 6px;">
+          <div style="font-size: 11px; font-weight: 600; color: #475569;">NEEDS REVIEW</div>
+          <div style="font-size: 18px; font-weight: 700; color: #475569;">{{ analytics.validation_stats.needs_review }}</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+{% endblock %}

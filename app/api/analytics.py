@@ -3,7 +3,7 @@ from sqlalchemy.orm import Session
 from app.database import get_db
 from app.api.deps import require_any_authenticated
 from app.models.user import User
-from app.services.analytics_service import get_dashboard_metrics
+from app.services.analytics_service import get_dashboard_metrics, get_detailed_analytics
 
 router = APIRouter(prefix="/api/analytics", tags=["Analytics & KPIs"])
 
@@ -15,7 +15,6 @@ def get_dashboard_data(
 ):
     """Retrieve real-time dashboard analytics from actual database records."""
     metrics = get_dashboard_metrics(db)
-    # Serialize documents and jobs for JSON response
     recent_docs_serialized = [
         {
             "id": d.id,
@@ -46,3 +45,34 @@ def get_dashboard_data(
     metrics_copy["recent_documents"] = recent_docs_serialized
     metrics_copy["recent_jobs"] = recent_jobs_serialized
     return metrics_copy
+
+
+@router.get("/detailed")
+def get_detailed_data(
+    current_user: User = Depends(require_any_authenticated),
+    db: Session = Depends(get_db)
+):
+    """Retrieve comprehensive operational analytics, file-type performance, and extraction accuracy."""
+    analytics = get_detailed_analytics(db)
+    analytics_copy = analytics.copy()
+    analytics_copy["recent_documents"] = [
+        {
+            "id": d.id,
+            "filename": d.original_filename,
+            "file_type": d.file_type,
+            "file_size": d.file_size,
+            "uploaded_at": d.uploaded_at.isoformat(),
+            "status": d.upload_status.value
+        }
+        for d in analytics["recent_documents"]
+    ]
+    analytics_copy["recent_jobs"] = [
+        {
+            "id": j.id,
+            "document_name": j.document.original_filename if j.document else "Unknown",
+            "status": j.status.value,
+            "duration": j.processing_duration
+        }
+        for j in analytics["recent_jobs"]
+    ]
+    return analytics_copy

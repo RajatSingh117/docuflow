@@ -10,7 +10,7 @@ from app.models.audit import AuditLog
 from app.models.document import Document
 from app.models.job import ProcessingJob, JobStatus
 from app.api.deps import get_current_user_optional
-from app.services.analytics_service import get_dashboard_metrics
+from app.services.analytics_service import get_dashboard_metrics, get_detailed_analytics
 
 router = APIRouter(tags=["Frontend Views"])
 templates = Jinja2Templates(directory="app/templates")
@@ -21,7 +21,7 @@ def login_page(request: Request, current_user: User = Depends(get_current_user_o
     """Render the sign-in page."""
     if current_user:
         return RedirectResponse(url="/", status_code=status.HTTP_302_FOUND)
-    return templates.TemplateResponse("auth/login.html", {"request": request})
+    return templates.TemplateResponse(request=request, name="auth/login.html", context={"request": request})
 
 
 @router.get("/", response_class=HTMLResponse)
@@ -35,9 +35,7 @@ def dashboard_page(
         return RedirectResponse(url="/login", status_code=status.HTTP_302_FOUND)
 
     metrics = get_dashboard_metrics(db)
-    return templates.TemplateResponse(
-        "dashboard/index.html",
-        {
+    return templates.TemplateResponse(request=request, name="dashboard/index.html", context={
             "request": request,
             "current_user": current_user,
             "active_page": "dashboard",
@@ -60,9 +58,7 @@ def admin_users_page(
         return RedirectResponse(url="/", status_code=status.HTTP_302_FOUND)
 
     users = db.query(User).order_by(User.created_at.desc()).all()
-    return templates.TemplateResponse(
-        "admin/users.html",
-        {
+    return templates.TemplateResponse(request=request, name="admin/users.html", context={
             "request": request,
             "current_user": current_user,
             "active_page": "users",
@@ -81,9 +77,7 @@ def settings_page(
         return RedirectResponse(url="/login", status_code=status.HTTP_302_FOUND)
 
     db_backend = "PostgreSQL" if "postgresql" in settings.DATABASE_URL else "SQLite (Local Development / Testing)"
-    return templates.TemplateResponse(
-        "settings.html",
-        {
+    return templates.TemplateResponse(request=request, name="settings.html", context={
             "request": request,
             "current_user": current_user,
             "active_page": "settings",
@@ -104,9 +98,7 @@ def logs_page(
         return RedirectResponse(url="/login", status_code=status.HTTP_302_FOUND)
 
     logs = db.query(AuditLog).order_by(AuditLog.created_at.desc()).limit(100).all()
-    return templates.TemplateResponse(
-        "logs/index.html",
-        {
+    return templates.TemplateResponse(request=request, name="logs/index.html", context={
             "request": request,
             "current_user": current_user,
             "active_page": "logs",
@@ -134,9 +126,7 @@ def documents_page(
         query = query.filter(Document.file_type == file_type.lower())
 
     docs = query.order_by(Document.uploaded_at.desc()).all()
-    return templates.TemplateResponse(
-        "documents/index.html",
-        {
+    return templates.TemplateResponse(request=request, name="documents/index.html", context={
             "request": request,
             "current_user": current_user,
             "active_page": "documents",
@@ -158,9 +148,7 @@ def upload_page(
     if current_user.role == UserRole.VIEWER:
         return RedirectResponse(url="/documents", status_code=status.HTTP_302_FOUND)
 
-    return templates.TemplateResponse(
-        "documents/upload.html",
-        {
+    return templates.TemplateResponse(request=request, name="documents/upload.html", context={
             "request": request,
             "current_user": current_user,
             "active_page": "upload"
@@ -183,9 +171,7 @@ def document_detail_page(
     if not doc:
         return RedirectResponse(url="/documents", status_code=status.HTTP_302_FOUND)
 
-    return templates.TemplateResponse(
-        "documents/detail.html",
-        {
+    return templates.TemplateResponse(request=request, name="documents/detail.html", context={
             "request": request,
             "current_user": current_user,
             "active_page": "documents",
@@ -210,9 +196,7 @@ def processing_jobs_page(
         query = query.filter(ProcessingJob.status == status)
 
     jobs = query.order_by(ProcessingJob.created_at.desc()).all()
-    return templates.TemplateResponse(
-        "processing/jobs.html",
-        {
+    return templates.TemplateResponse(request=request, name="processing/jobs.html", context={
             "request": request,
             "current_user": current_user,
             "active_page": "jobs",
@@ -237,9 +221,7 @@ def processing_job_detail_page(
     if not job:
         return RedirectResponse(url="/processing/jobs", status_code=status.HTTP_302_FOUND)
 
-    return templates.TemplateResponse(
-        "processing/detail.html",
-        {
+    return templates.TemplateResponse(request=request, name="processing/detail.html", context={
             "request": request,
             "current_user": current_user,
             "active_page": "jobs",
@@ -259,9 +241,7 @@ def review_list_page(
         return RedirectResponse(url="/login", status_code=status.HTTP_302_FOUND)
 
     jobs = db.query(ProcessingJob).filter(ProcessingJob.status == JobStatus.NEEDS_REVIEW).order_by(ProcessingJob.created_at.desc()).all()
-    return templates.TemplateResponse(
-        "review/index.html",
-        {
+    return templates.TemplateResponse(request=request, name="review/index.html", context={
             "request": request,
             "current_user": current_user,
             "active_page": "review",
@@ -285,9 +265,7 @@ def review_detail_page(
     if not job:
         return RedirectResponse(url="/processing/review", status_code=status.HTTP_302_FOUND)
 
-    return templates.TemplateResponse(
-        "review/detail.html",
-        {
+    return templates.TemplateResponse(request=request, name="review/detail.html", context={
             "request": request,
             "current_user": current_user,
             "active_page": "review",
@@ -312,9 +290,7 @@ def reports_page(
         ProcessingJob.status.in_([JobStatus.COMPLETED, JobStatus.NEEDS_REVIEW])
     ).order_by(ProcessingJob.created_at.desc()).all()
 
-    return templates.TemplateResponse(
-        "reports/index.html",
-        {
+    return templates.TemplateResponse(request=request, name="reports/index.html", context={
             "request": request,
             "current_user": current_user,
             "active_page": "reports",
@@ -337,12 +313,31 @@ def schedules_page(
     from app.models.schedule import ScheduledJob
     schedules = db.query(ScheduledJob).order_by(ScheduledJob.created_at.desc()).all()
 
-    return templates.TemplateResponse(
-        "schedules/index.html",
-        {
+    return templates.TemplateResponse(request=request, name="schedules/index.html", context={
             "request": request,
             "current_user": current_user,
             "active_page": "schedules",
             "schedules": schedules
+        }
+    )
+
+
+@router.get("/analytics", response_class=HTMLResponse)
+def analytics_page(
+    request: Request,
+    current_user: User = Depends(get_current_user_optional),
+    db: Session = Depends(get_db)
+):
+    """Render executive analytics and performance metrics dashboard."""
+    if not current_user:
+        return RedirectResponse(url="/login", status_code=status.HTTP_302_FOUND)
+
+    analytics = get_detailed_analytics(db)
+    return templates.TemplateResponse(request=request, name="analytics/index.html", context={
+            "request": request,
+            "current_user": current_user,
+            "active_page": "analytics",
+            "analytics": analytics,
+            "current_time": datetime.utcnow().strftime("%Y-%m-%d %H:%M UTC")
         }
     )
