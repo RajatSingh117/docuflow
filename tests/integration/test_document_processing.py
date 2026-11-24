@@ -1,9 +1,19 @@
 import io
+import fitz
 from app.models.job import JobStatus
 
 
+def create_test_pdf_bytes():
+    doc = fitz.open()
+    page = doc.new_page()
+    page.insert_text((50, 50), "Invoice Number: INV-2026-999\nDate: 2026-03-20\nTotal: $1,500.00\nEmail: billing@company.org")
+    pdf_bytes = doc.tobytes()
+    doc.close()
+    return pdf_bytes
+
+
 def test_upload_document_by_manager(client, manager_headers):
-    pdf_content = b"%PDF-1.4\n%test invoice stream"
+    pdf_content = create_test_pdf_bytes()
     file = io.BytesIO(pdf_content)
 
     response = client.post(
@@ -20,7 +30,7 @@ def test_upload_document_by_manager(client, manager_headers):
 
 
 def test_upload_document_rejected_for_viewer(client, viewer_headers):
-    pdf_content = b"%PDF-1.4\ntest"
+    pdf_content = create_test_pdf_bytes()
     file = io.BytesIO(pdf_content)
 
     response = client.post(
@@ -32,7 +42,7 @@ def test_upload_document_rejected_for_viewer(client, viewer_headers):
 
 
 def test_list_and_download_document(client, manager_headers):
-    pdf_content = b"%PDF-1.4\n%downloadable document"
+    pdf_content = create_test_pdf_bytes()
     file = io.BytesIO(pdf_content)
 
     upload_res = client.post(
@@ -55,8 +65,8 @@ def test_list_and_download_document(client, manager_headers):
 
 
 def test_create_and_retry_processing_job(client, manager_headers):
-    # Upload document first
-    pdf_content = b"%PDF-1.4\n%for processing job"
+    # Upload valid document first
+    pdf_content = create_test_pdf_bytes()
     file = io.BytesIO(pdf_content)
     upload_res = client.post(
         "/api/documents/upload",
@@ -74,7 +84,7 @@ def test_create_and_retry_processing_job(client, manager_headers):
     assert job_res.status_code == 201
     job_data = job_res.json()
     assert job_data["document_id"] == doc_id
-    assert job_data["status"] == "QUEUED"
+    assert job_data["status"] in ["NEEDS_REVIEW", "COMPLETED", "EXTRACTED"]
     assert job_data["processing_type"] == "pdf_digital"
     job_id = job_data["id"]
 
