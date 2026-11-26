@@ -1,0 +1,17 @@
+{
+  "document_id": "DOC_007",
+  "file_name": "base_002_scanned.pdf",
+  "category": "scanned_pdfs",
+  "processing_status": "Success",
+  "error_message": "",
+  "used_ocr": true,
+  "duration_seconds": 0.8961,
+  "extracted_records": [
+    {
+      "name": "INVOICE DETAILS:",
+      "date": "",
+      "invoice_number": "",
+      "total": "4890.50"
+    }
+  ]
+}

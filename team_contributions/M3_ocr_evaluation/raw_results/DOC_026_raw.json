@@ -1,0 +1,17 @@
+{
+  "document_id": "DOC_026",
+  "file_name": "base_001_lowqual_1.jpg",
+  "category": "low_quality_images",
+  "processing_status": "Success",
+  "error_message": "",
+  "used_ocr": true,
+  "duration_seconds": 0.5191,
+  "extracted_records": [
+    {
+      "name": "Name: Sarah Jenkins",
+      "date": "2026-10-14",
+      "invoice_number": "INV-2026-101",
+      "total": "1250.00"
+    }
+  ]
+}

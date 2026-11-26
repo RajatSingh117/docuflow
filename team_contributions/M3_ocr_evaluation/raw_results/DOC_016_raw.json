@@ -1,0 +1,17 @@
+{
+  "document_id": "DOC_016",
+  "file_name": "base_001_blurry.png",
+  "category": "blurry_images",
+  "processing_status": "Success",
+  "error_message": "",
+  "used_ocr": true,
+  "duration_seconds": 0.4992,
+  "extracted_records": [
+    {
+      "name": "INVOICE DETAILS:",
+      "date": "",
+      "invoice_number": "",
+      "total": "1250.00"
+    }
+  ]
+}

@@ -1,0 +1,17 @@
+{
+  "document_id": "DOC_027",
+  "file_name": "base_002_lowqual_2.png",
+  "category": "low_quality_images",
+  "processing_status": "Success",
+  "error_message": "",
+  "used_ocr": true,
+  "duration_seconds": 0.5047,
+  "extracted_records": [
+    {
+      "name": "INVOICE DETAILS:",
+      "date": "",
+      "invoice_number": "",
+      "total": "4690.50"
+    }
+  ]
+}

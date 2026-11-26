@@ -1,0 +1,17 @@
+{
+  "document_id": "DOC_008",
+  "file_name": "base_003_scanned.pdf",
+  "category": "scanned_pdfs",
+  "processing_status": "Success",
+  "error_message": "",
+  "used_ocr": true,
+  "duration_seconds": 0.8287,
+  "extracted_records": [
+    {
+      "name": "Name: Elena Rostova",
+      "date": "2026-10-22",
+      "invoice_number": "INV-2026-103",
+      "total": "750.25"
+    }
+  ]
+}

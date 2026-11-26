@@ -1,0 +1,17 @@
+{
+  "document_id": "DOC_012",
+  "file_name": "base_002_clear.png",
+  "category": "clear_images",
+  "processing_status": "Success",
+  "error_message": "",
+  "used_ocr": true,
+  "duration_seconds": 0.5363,
+  "extracted_records": [
+    {
+      "name": "Name: Marcus Vance",
+      "date": "2026-10-18",
+      "invoice_number": "INV-2026-102",
+      "total": "4890.50"
+    }
+  ]
+}

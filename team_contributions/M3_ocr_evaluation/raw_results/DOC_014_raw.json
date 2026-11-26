@@ -1,0 +1,17 @@
+{
+  "document_id": "DOC_014",
+  "file_name": "base_004_clear.png",
+  "category": "clear_images",
+  "processing_status": "Success",
+  "error_message": "",
+  "used_ocr": true,
+  "duration_seconds": 0.5038,
+  "extracted_records": [
+    {
+      "name": "Name: David Lindqvist",
+      "date": "2026-10-25",
+      "invoice_number": "INV-2026-104",
+      "total": "9200.00"
+    }
+  ]
+}

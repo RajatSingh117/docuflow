@@ -1,0 +1,17 @@
+{
+  "document_id": "DOC_022",
+  "file_name": "base_002_rot15.png",
+  "category": "rotated_images",
+  "processing_status": "Success",
+  "error_message": "",
+  "used_ocr": true,
+  "duration_seconds": 1.3049,
+  "extracted_records": [
+    {
+      "name": "",
+      "date": "",
+      "invoice_number": "",
+      "total": ""
+    }
+  ]
+}
