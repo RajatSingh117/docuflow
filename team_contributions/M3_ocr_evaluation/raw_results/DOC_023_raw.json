@@ -1,0 +1,10 @@
+{
+  "document_id": "DOC_023",
+  "file_name": "base_003_rot30.png",
+  "category": "rotated_images",
+  "processing_status": "Failed",
+  "error_message": "No readable text was found.",
+  "used_ocr": false,
+  "duration_seconds": 0.5322,
+  "extracted_records": []
+}

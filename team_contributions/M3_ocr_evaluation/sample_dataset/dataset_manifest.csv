@@ -1,0 +1,31 @@
+document_id,file_path,document_type,quality_category,format,resolution,page_count,transformation_details
+DOC_001,sample_dataset/text_pdfs/base_001_text.pdf,Commercial Invoice,text_pdfs,PDF,Vector,1,Native digital text layer
+DOC_002,sample_dataset/text_pdfs/base_002_text.pdf,Purchase Invoice,text_pdfs,PDF,Vector,1,Native digital text layer
+DOC_003,sample_dataset/text_pdfs/base_003_text.pdf,Service Invoice,text_pdfs,PDF,Vector,1,Native digital text layer
+DOC_004,sample_dataset/text_pdfs/base_004_text.pdf,Commercial Invoice,text_pdfs,PDF,Vector,1,Native digital text layer
+DOC_005,sample_dataset/text_pdfs/base_005_text.pdf,Receipt,text_pdfs,PDF,Vector,1,Native digital text layer
+DOC_006,sample_dataset/scanned_pdfs/base_001_scanned.pdf,Commercial Invoice,scanned_pdfs,PDF,1200x1600,1,"Raster image-only PDF, requires OCR"
+DOC_007,sample_dataset/scanned_pdfs/base_002_scanned.pdf,Purchase Invoice,scanned_pdfs,PDF,1200x1600,1,"Raster image-only PDF, requires OCR"
+DOC_008,sample_dataset/scanned_pdfs/base_003_scanned.pdf,Service Invoice,scanned_pdfs,PDF,1200x1600,1,"Raster image-only PDF, requires OCR"
+DOC_009,sample_dataset/scanned_pdfs/base_004_scanned.pdf,Commercial Invoice,scanned_pdfs,PDF,1200x1600,1,"Raster image-only PDF, requires OCR"
+DOC_010,sample_dataset/scanned_pdfs/base_005_scanned.pdf,Receipt,scanned_pdfs,PDF,1200x1600,1,"Raster image-only PDF, requires OCR"
+DOC_011,sample_dataset/clear_images/base_001_clear.png,Commercial Invoice,clear_images,PNG,1200x1600,1,High-contrast clean image
+DOC_012,sample_dataset/clear_images/base_002_clear.png,Purchase Invoice,clear_images,PNG,1200x1600,1,High-contrast clean image
+DOC_013,sample_dataset/clear_images/base_003_clear.png,Service Invoice,clear_images,PNG,1200x1600,1,High-contrast clean image
+DOC_014,sample_dataset/clear_images/base_004_clear.png,Commercial Invoice,clear_images,PNG,1200x1600,1,High-contrast clean image
+DOC_015,sample_dataset/clear_images/base_005_clear.png,Receipt,clear_images,PNG,1200x1600,1,High-contrast clean image
+DOC_016,sample_dataset/blurry_images/base_001_blurry.png,Commercial Invoice,blurry_images,PNG,1200x1600,1,Gaussian blur radius=1.5
+DOC_017,sample_dataset/blurry_images/base_002_blurry.png,Purchase Invoice,blurry_images,PNG,1200x1600,1,Gaussian blur radius=2.5
+DOC_018,sample_dataset/blurry_images/base_003_blurry.png,Service Invoice,blurry_images,PNG,1200x1600,1,Gaussian blur radius=3.5
+DOC_019,sample_dataset/blurry_images/base_004_blurry.png,Commercial Invoice,blurry_images,PNG,1200x1600,1,Gaussian blur radius=4.5
+DOC_020,sample_dataset/blurry_images/base_005_blurry.png,Receipt,blurry_images,PNG,1200x1600,1,Gaussian blur radius=5.5
+DOC_021,sample_dataset/rotated_images/base_001_rot5.png,Commercial Invoice,rotated_images,PNG,1336x1700,1,Rotated 5 deg
+DOC_022,sample_dataset/rotated_images/base_002_rot15.png,Purchase Invoice,rotated_images,PNG,1574x1858,1,Rotated 15 deg
+DOC_023,sample_dataset/rotated_images/base_003_rot30.png,Service Invoice,rotated_images,PNG,1840x1986,1,Rotated 30 deg
+DOC_024,sample_dataset/rotated_images/base_004_rot90.png,Commercial Invoice,rotated_images,PNG,1600x1200,1,Rotated 90 deg
+DOC_025,sample_dataset/rotated_images/base_005_rot180.png,Receipt,rotated_images,PNG,1200x1600,1,Rotated 180 deg
+DOC_026,sample_dataset/low_quality_images/base_001_lowqual_1.jpg,Commercial Invoice,low_quality_images,JPG,1200x1600,1,JPEG Quality 20
+DOC_027,sample_dataset/low_quality_images/base_002_lowqual_2.png,Purchase Invoice,low_quality_images,PNG,1200x1600,1,Downsample 3x then Upscale
+DOC_028,sample_dataset/low_quality_images/base_003_lowqual_3.png,Service Invoice,low_quality_images,PNG,1200x1600,1,Salt & Pepper Noise
+DOC_029,sample_dataset/low_quality_images/base_004_lowqual_4.png,Commercial Invoice,low_quality_images,PNG,1200x1600,1,Low Contrast & Low Brightness
+DOC_030,sample_dataset/low_quality_images/base_005_lowqual_5.jpg,Receipt,low_quality_images,JPG,1200x1600,1,Combined JPEG 15 + Downsample 2x

@@ -1,0 +1,17 @@
+{
+  "document_id": "DOC_013",
+  "file_name": "base_003_clear.png",
+  "category": "clear_images",
+  "processing_status": "Success",
+  "error_message": "",
+  "used_ocr": true,
+  "duration_seconds": 0.5803,
+  "extracted_records": [
+    {
+      "name": "Name: Elena Rostova",
+      "date": "2026-10-22",
+      "invoice_number": "INV-2026-103",
+      "total": "750.25"
+    }
+  ]
+}

@@ -1,0 +1,17 @@
+{
+  "document_id": "DOC_005",
+  "file_name": "base_005_text.pdf",
+  "category": "text_pdfs",
+  "processing_status": "Success",
+  "error_message": "",
+  "used_ocr": false,
+  "duration_seconds": 0.014,
+  "extracted_records": [
+    {
+      "name": "Name: Rachel Thorne",
+      "date": "2026-10-29",
+      "invoice_number": "INV-2026-105",
+      "total": "320.00"
+    }
+  ]
+}

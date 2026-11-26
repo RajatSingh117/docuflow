@@ -1,0 +1,17 @@
+{
+  "document_id": "DOC_003",
+  "file_name": "base_003_text.pdf",
+  "category": "text_pdfs",
+  "processing_status": "Success",
+  "error_message": "",
+  "used_ocr": false,
+  "duration_seconds": 0.015,
+  "extracted_records": [
+    {
+      "name": "Name: Elena Rostova",
+      "date": "2026-10-22",
+      "invoice_number": "INV-2026-103",
+      "total": "750.25"
+    }
+  ]
+}
